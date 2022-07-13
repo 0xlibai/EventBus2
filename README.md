@@ -2,7 +2,7 @@ EventBus
 ======
 
 [![GoDoc](https://godoc.org/github.com/0xlibai/EventBus2?status.svg)](https://godoc.org/github.com/0xlibai/EventBus2) 
-[![codecov](https://codecov.io/gh/0xlibai/EventBus2/branch/master/graph/badge.svg?token=MK0WB27C1T)](https://codecov.io/gh/0xlibai/EventBus2)
+[![codecov](https://codecov.io/gh/0xlibai/EventBus2/branch/main/graph/badge.svg?token=MK0WB27C1T)](https://codecov.io/gh/0xlibai/EventBus2)
 ![Build Status](https://github.com/0xlibai/EventBus2/actions/workflows/test.yml/badge.svg)
 
 > Since [the original project](https://github.com/asaskevich/EventBus) is not maintained, I fork and maintain it
