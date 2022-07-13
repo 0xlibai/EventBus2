@@ -1,7 +1,11 @@
 EventBus
 ======
 
-[![GoDoc](https://godoc.org/github.com/asaskevich/EventBus?status.svg)](https://godoc.org/github.com/asaskevich/EventBus) [![Coverage Status](https://img.shields.io/coveralls/asaskevich/EventBus.svg)](https://coveralls.io/r/asaskevich/EventBus?branch=master) [![Build Status](https://travis-ci.org/asaskevich/EventBus.svg)](https://travis-ci.org/asaskevich/EventBus)
+[![GoDoc](https://godoc.org/github.com/0xlibai/EventBus2?status.svg)](https://godoc.org/github.com/0xlibai/EventBus2) 
+[![codecov](https://codecov.io/gh/0xlibai/EventBus2/branch/master/graph/badge.svg?token=MK0WB27C1T)](https://codecov.io/gh/0xlibai/EventBus2)
+![Build Status](https://github.com/0xlibai/EventBus2/actions/workflows/test.yml/badge.svg)
+
+> Since [the original project](https://github.com/asaskevich/EventBus) is not maintained, I fork and maintain it
 
 Package EventBus is the little and lightweight eventbus with async compatibility for GoLang.
 
@@ -9,19 +13,19 @@ Package EventBus is the little and lightweight eventbus with async compatibility
 Make sure that Go is installed on your computer.
 Type the following command in your terminal:
 
-	go get github.com/asaskevich/EventBus
+	go get github.com/0xlibai/EventBus2
 
 After it the package is ready to use.
 
 #### Import package in your project
 Add following line in your `*.go` file:
 ```go
-import "github.com/asaskevich/EventBus"
+import "github.com/0xlibai/EventBus2"
 ```
 If you unhappy to use long `EventBus`, you can do something like this:
 ```go
 import (
-	evbus "github.com/asaskevich/EventBus"
+	evbus "github.com/0xlibai/EventBus2"
 )
 ```
 
@@ -148,13 +152,13 @@ func main() {
 ```
 
 #### Notes
-Documentation is available here: [godoc.org](https://godoc.org/github.com/asaskevich/EventBus).
-Full information about code coverage is also available here: [EventBus on gocover.io](http://gocover.io/github.com/asaskevich/EventBus).
+Documentation is available here: [godoc.org](https://godoc.org/github.com/0xlibai/EventBus2).
+Full information about code coverage is also available here: [EventBus on gocover.io](http://gocover.io/github.com/0xlibai/EventBus2) or [EventBus on codecov.io](https://app.codecov.io/gh/0xlibai/EventBus2)
 
 #### Support
 If you do have a contribution for the package feel free to put up a Pull Request or open Issue.
 
-#### Special thanks to [contributors](https://github.com/asaskevich/EventBus/graphs/contributors)
+#### Special thanks to [contributors](https://github.com/0xlibai/EventBus2/graphs/contributors)
 * [Brian Downs](https://github.com/briandowns)
 * [Dominik Schulz](https://github.com/gittex)
 * [bennAH](https://github.com/bennAH)
