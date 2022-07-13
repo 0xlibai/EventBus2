@@ -1,4 +1,4 @@
-package EventBus
+package EventBus2
 
 import (
 	"errors"
@@ -88,8 +88,8 @@ func (client *Client) Start() error {
 		if err == nil {
 			service.wg.Add(1)
 			service.started = true
-			go http.Serve(l, nil)	
-		}	
+			go http.Serve(l, nil)
+		}
 	} else {
 		err = errors.New("Client service already started")
 	}
