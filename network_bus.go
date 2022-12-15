@@ -10,7 +10,7 @@ import (
 )
 
 // NetworkBus - object capable of subscribing to remote event buses in addition to remote event
-// busses subscribing to it's local event bus. Compoed of a server and client
+// busses subscribing to its local event bus. Composed of a server and client
 type NetworkBus struct {
 	*Client
 	*Server
@@ -51,17 +51,28 @@ func (networkBus *NetworkBus) Start() error {
 	serverService := networkBus.Server.service
 	if !service.started {
 		server := rpc.NewServer()
-		server.RegisterName("ServerService", serverService)
-		server.RegisterName("ClientService", clientService)
+		err := server.RegisterName("ServerService", serverService)
+		if err != nil {
+			return err
+		}
+		err = server.RegisterName("ClientService", clientService)
+		if err != nil {
+			return err
+		}
 		server.HandleHTTP(networkBus.path, "/debug"+networkBus.path)
 		l, e := net.Listen("tcp", networkBus.address)
 		if e != nil {
 			err = fmt.Errorf("listen error: %v", e)
 		}
 		service.wg.Add(1)
-		go http.Serve(l, nil)
+		go func() {
+			err := http.Serve(l, nil)
+			if err != nil {
+				return
+			}
+		}()
 	} else {
-		err = errors.New("Server bus already started")
+		err = errors.New("server bus already started")
 	}
 	return err
 }

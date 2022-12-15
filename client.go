@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"strings"
 	"sync"
 )
 
@@ -38,6 +39,14 @@ func NewClient(address, path string, eventBus Bus) *Client {
 	return client
 }
 
+// Helper function - Trim string prior to the colon, if found
+func trimStringBeforeColon(s string) string {
+	if idx := strings.Index(s, ":"); idx != -1 {
+		return s[idx:]
+	}
+	return s
+}
+
 // EventBus - returns the underlying event bus
 func (client *Client) EventBus() Bus {
 	return client.eventBus
@@ -51,27 +60,35 @@ func (client *Client) doSubscribe(topic string, fn interface{}, serverAddr, serv
 	}()
 
 	rpcClient, err := rpc.DialHTTPPath("tcp", serverAddr, serverPath)
-	defer rpcClient.Close()
+	defer func(rpcClient *rpc.Client) {
+		err := rpcClient.Close()
+		if err != nil {
+			err = fmt.Errorf("dial close failed: %v", err)
+		}
+	}(rpcClient)
 	if err != nil {
-		fmt.Errorf("dialing: %v", err)
+		err = fmt.Errorf("dialing: %v", err)
 	}
 	args := &SubscribeArg{client.address, client.path, PublishService, subscribeType, topic}
 	reply := new(bool)
 	err = rpcClient.Call(RegisterService, args, reply)
 	if err != nil {
-		fmt.Errorf("Register error: %v", err)
+		err = fmt.Errorf("register error: %v", err)
 	}
 	if *reply {
-		client.eventBus.Subscribe(topic, fn)
+		err := client.eventBus.Subscribe(topic, fn)
+		if err != nil {
+			return
+		}
 	}
 }
 
-//Subscribe subscribes to a topic in a remote event bus
+// Subscribe subscribes to a topic in a remote event bus
 func (client *Client) Subscribe(topic string, fn interface{}, serverAddr, serverPath string) {
 	client.doSubscribe(topic, fn, serverAddr, serverPath, Subscribe)
 }
 
-//SubscribeOnce subscribes once to a topic in a remote event bus
+// SubscribeOnce subscribes once to a topic in a remote event bus
 func (client *Client) SubscribeOnce(topic string, fn interface{}, serverAddr, serverPath string) {
 	client.doSubscribe(topic, fn, serverAddr, serverPath, SubscribeOnce)
 }
@@ -82,16 +99,24 @@ func (client *Client) Start() error {
 	service := client.service
 	if !service.started {
 		server := rpc.NewServer()
-		server.Register(service)
+		err := server.Register(service)
+		if err != nil {
+			return err
+		}
 		server.HandleHTTP(client.path, "/debug"+client.path)
-		l, err := net.Listen("tcp", client.address)
+		l, err := net.Listen("tcp", trimStringBeforeColon(client.address))
 		if err == nil {
 			service.wg.Add(1)
 			service.started = true
-			go http.Serve(l, nil)
+			go func() {
+				err := http.Serve(l, nil)
+				if err != nil {
+					return
+				}
+			}()
 		}
 	} else {
-		err = errors.New("Client service already started")
+		err = errors.New("client service already started")
 	}
 	return err
 }

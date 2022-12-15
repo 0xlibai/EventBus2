@@ -61,9 +61,15 @@ func (server *Server) EventBus() Bus {
 func (server *Server) rpcCallback(subscribeArg *SubscribeArg) func(args ...interface{}) {
 	return func(args ...interface{}) {
 		client, connErr := rpc.DialHTTPPath("tcp", subscribeArg.ClientAddr, subscribeArg.ClientPath)
-		defer client.Close()
+		defer func(client *rpc.Client) {
+			err := client.Close()
+			if err != nil {
+				err = fmt.Errorf("dial close failed: %v", err)
+			}
+		}(client)
 		if connErr != nil {
-			fmt.Errorf("dialing: %v", connErr)
+			_ = fmt.Errorf("dialing: %v", connErr)
+			return
 		}
 		clientArg := new(ClientArg)
 		clientArg.Topic = subscribeArg.Topic
@@ -71,7 +77,8 @@ func (server *Server) rpcCallback(subscribeArg *SubscribeArg) func(args ...inter
 		var reply bool
 		err := client.Call(subscribeArg.ServiceMethod, clientArg, &reply)
 		if err != nil {
-			fmt.Errorf("dialing: %v", err)
+			_ = fmt.Errorf("dialing: %v", err)
+			return
 		}
 	}
 }
@@ -94,18 +101,26 @@ func (server *Server) Start() error {
 	service := server.service
 	if !service.started {
 		rpcServer := rpc.NewServer()
-		rpcServer.Register(service)
+		err := rpcServer.Register(service)
+		if err != nil {
+			return err
+		}
 		rpcServer.HandleHTTP(server.path, "/debug"+server.path)
 		l, e := net.Listen("tcp", server.address)
 		if e != nil {
 			err = e
-			fmt.Errorf("listen error: %v", e)
+			err = fmt.Errorf("listen error: %v", e)
 		}
 		service.started = true
 		service.wg.Add(1)
-		go http.Serve(l, nil)
+		go func() {
+			err := http.Serve(l, nil)
+			if err != nil {
+				return
+			}
+		}()
 	} else {
-		err = errors.New("Server bus already started")
+		err = errors.New("server bus already started")
 	}
 	return err
 }
@@ -135,9 +150,15 @@ func (service *ServerService) Register(arg *SubscribeArg, success *bool) error {
 		rpcCallback := service.server.rpcCallback(arg)
 		switch arg.SubscribeType {
 		case Subscribe:
-			service.server.eventBus.Subscribe(arg.Topic, rpcCallback)
+			err := service.server.eventBus.Subscribe(arg.Topic, rpcCallback)
+			if err != nil {
+				return err
+			}
 		case SubscribeOnce:
-			service.server.eventBus.SubscribeOnce(arg.Topic, rpcCallback)
+			err := service.server.eventBus.SubscribeOnce(arg.Topic, rpcCallback)
+			if err != nil {
+				return err
+			}
 		}
 		var topicSubscribers []*SubscribeArg
 		if _, ok := subscribers[arg.Topic]; ok {

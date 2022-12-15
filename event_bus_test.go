@@ -15,7 +15,10 @@ func TestNew(t *testing.T) {
 
 func TestHasCallback(t *testing.T) {
 	bus := New()
-	bus.Subscribe("topic", func() {})
+	err := bus.Subscribe("topic", func() {})
+	if err != nil {
+		t.Fail()
+	}
 	if bus.HasCallback("topic_topic") {
 		t.Fail()
 	}
@@ -49,9 +52,18 @@ func TestSubscribeOnceAndManySubscribe(t *testing.T) {
 	event := "topic"
 	flag := 0
 	fn := func() { flag += 1 }
-	bus.SubscribeOnce(event, fn)
-	bus.Subscribe(event, fn)
-	bus.Subscribe(event, fn)
+	err := bus.SubscribeOnce(event, fn)
+	if err != nil {
+		t.Fail()
+	}
+	err = bus.Subscribe(event, fn)
+	if err != nil {
+		t.Fail()
+	}
+	err = bus.Subscribe(event, fn)
+	if err != nil {
+		t.Fail()
+	}
 	bus.Publish(event)
 
 	if flag != 3 {
@@ -62,7 +74,10 @@ func TestSubscribeOnceAndManySubscribe(t *testing.T) {
 func TestUnsubscribe(t *testing.T) {
 	bus := New()
 	handler := func() {}
-	bus.Subscribe("topic", handler)
+	err := bus.Subscribe("topic", handler)
+	if err != nil {
+		t.Fail()
+	}
 	if bus.Unsubscribe("topic", handler) != nil {
 		t.Fail()
 	}
@@ -83,7 +98,10 @@ func TestUnsubscribeMethod(t *testing.T) {
 	bus := New()
 	h := &handler{val: 0}
 
-	bus.Subscribe("topic", h.Handle)
+	err := bus.Subscribe("topic", h.Handle)
+	if err != nil {
+		t.Fail()
+	}
 	bus.Publish("topic")
 	if bus.Unsubscribe("topic", h.Handle) != nil {
 		t.Fail()
@@ -101,7 +119,7 @@ func TestUnsubscribeMethod(t *testing.T) {
 
 func TestPublish(t *testing.T) {
 	bus := New()
-	bus.Subscribe("topic", func(a int, err error) {
+	err := bus.Subscribe("topic", func(a int, err error) {
 		if a != 10 {
 			t.Fail()
 		}
@@ -110,16 +128,22 @@ func TestPublish(t *testing.T) {
 			t.Fail()
 		}
 	})
+	if err != nil {
+		t.Fail()
+	}
 	bus.Publish("topic", 10, nil)
 }
 
-func TestSubcribeOnceAsync(t *testing.T) {
+func TestSubscribeOnceAsync(t *testing.T) {
 	results := make([]int, 0)
 
 	bus := New()
-	bus.SubscribeOnceAsync("topic", func(a int, out *[]int) {
+	err := bus.SubscribeOnceAsync("topic", func(a int, out *[]int) {
 		*out = append(*out, a)
 	})
+	if err != nil {
+		t.Fail()
+	}
 
 	bus.Publish("topic", 10, &results)
 	bus.Publish("topic", 10, &results)
@@ -139,11 +163,14 @@ func TestSubscribeAsyncTransactional(t *testing.T) {
 	results := make([]int, 0)
 
 	bus := New()
-	bus.SubscribeAsync("topic", func(a int, out *[]int, dur string) {
+	err := bus.SubscribeAsync("topic", func(a int, out *[]int, dur string) {
 		sleep, _ := time.ParseDuration(dur)
 		time.Sleep(sleep)
 		*out = append(*out, a)
 	}, true)
+	if err != nil {
+		t.Fail()
+	}
 
 	bus.Publish("topic", 1, &results, "1s")
 	bus.Publish("topic", 2, &results, "0s")
@@ -163,9 +190,12 @@ func TestSubscribeAsync(t *testing.T) {
 	results := make(chan int)
 
 	bus := New()
-	bus.SubscribeAsync("topic", func(a int, out chan<- int) {
+	err := bus.SubscribeAsync("topic", func(a int, out chan<- int) {
 		out <- a
 	}, false)
+	if err != nil {
+		t.Fail()
+	}
 
 	bus.Publish("topic", 1, results)
 	bus.Publish("topic", 2, results)
@@ -173,7 +203,7 @@ func TestSubscribeAsync(t *testing.T) {
 	numResults := 0
 
 	go func() {
-		for _ = range results {
+		for range results {
 			numResults++
 		}
 	}()
